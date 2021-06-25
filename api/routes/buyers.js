@@ -6,6 +6,7 @@ const buyers = require('../../assets/data/buyers.json')
 
 /* GET records listing. */
 router.get('/buyers', function (req, res) {
+  console.log('/buyers')
   res.json(buyers)
 })
 module.exports = router
