@@ -1,0 +1,23 @@
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "lib": ["esnext", "esnext.asynciterable", "dom"],
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "allowJs": true,
+    "sourceMap": true,
+    "strict": true,
+    "checkJs": false,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./*"],
+      "@/*": ["./*"]
+    },
+    "types": ["@types/node", "@nuxt/types", "@types/jest"]
+  },
+  "exclude": ["node_modules", ".nuxt"]
+}

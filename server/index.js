@@ -3,6 +3,25 @@ const consola = require('consola')
 const { Nuxt, Builder } = require('nuxt')
 const app = express()
 
+
+
+// Require API routes
+const test = require('../api/routes/test')
+const bids = require('../api/routes/bids')
+const buyers = require('../api/routes/buyers')
+const competitions = require('../api/routes/competitions')
+const sellers = require('../api/routes/sellers')
+
+const apiRoute = '/api'
+// Import API Routes
+app.use(apiRoute, test)
+app.use(apiRoute, bids)
+app.use(apiRoute, buyers)
+app.use(apiRoute, competitions)
+app.use(apiRoute, sellers)
+
+app.use(express.json())
+
 // Import and Set Nuxt.js options
 const config = require('../nuxt.config.js')
 config.dev = process.env.NODE_ENV !== 'production'

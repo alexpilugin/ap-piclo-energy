@@ -2,6 +2,11 @@ const colors = require('vuetify/es5/util/colors').default
 
 module.exports = {
   mode: 'universal',
+  ssr: true, //Server Side Rendering
+  target: 'server',
+  ssrLog: true,
+  telemetry: false, /* ignore the Nuxt.js starting question */
+  dev: process.env.NODE_ENV !== 'production',
   /*
   ** Headers of the page
   */
@@ -41,8 +46,28 @@ module.exports = {
   ** Nuxt.js modules
   */
   modules: [
+    // Doc: https://http.nuxtjs.org
+    '@nuxt/http',
+    // https://go.nuxtjs.dev/pwa
     '@nuxtjs/pwa',
+    [
+      '@nuxtjs/component-cache',
+      {
+        max: 10000,
+        maxAge: 1000 * 60 * 60
+      }
+    ]
   ],
+  /*
+  ** Server Middleware
+  */
+  serverMiddleware: {
+    '/api': '~/api',
+  },
+  //issue: Nuxt is really slow: https://github.com/nuxt/nuxt.js/issues/6508
+  vueMeta: {
+    debounceWait: 250
+  },
   /*
   ** vuetify module configuration
   ** https://github.com/nuxt-community/vuetify-module
@@ -68,10 +93,39 @@ module.exports = {
   ** Build configuration
   */
   build: {
+    parallel: true,
+    cache: true,
+    transpile: ['vue-intersect'],
+    buildDir: '.nuxt',
+    publicPath: '/assets/',
+    //https://github.com/nuxt/nuxt.js/issues/3828#issuecomment-508428611
+    filenames: {
+      app: ({ isDev }) => isDev ? '[name].[hash].js' : '[chunkhash].js',
+      chunk: ({ isDev }) => isDev ? '[name].[hash].js' : '[chunkhash].js'
+    },
+    babel: {
+      presets({ isServer }) {
+        let targets = isServer ? { node: '10' } : { ie: '11' }
+        return [
+          [require.resolve('@nuxt/babel-preset-app'),
+          {
+            // targets
+            buildTarget: isServer ? 'server' : 'client',
+            corejs: { version: 3 }
+          }
+          ]
+        ]
+      },
+      'env': {
+        'production': {
+          'plugins': []
+        }
+      }
+    },
     /*
     ** You can extend webpack config here
     */
-    extend (config, ctx) {
+    extend(config, ctx) {
     }
   }
 }

@@ -1,27 +1,28 @@
 <template>
   <v-app dark>
-    <v-app-bar :clipped-left="true" fixed app>
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-      <v-toolbar-title v-text="title" />
-      <v-spacer />
-    </v-app-bar>
+
+    <AppBar />
+
     <v-main>
       <v-container>
         <nuxt />
       </v-container>
     </v-main>
-    <v-footer fixed app>
-      <span>&copy; {{ new Date().getFullYear() }}</span>
-    </v-footer>
+
+    <Footer />
+
   </v-app>
 </template>
 
 <script>
+import AppBar from '~/components/AppBar.vue'
+import Footer from '~/components/Footer.vue'
+
 export default {
-  data () {
-    return {
-      title: 'Vuetify.js'
-    }
+  name: "DefaultLayout",
+  components: {
+    AppBar,
+    Footer
   }
 }
 </script>
