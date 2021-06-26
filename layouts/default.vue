@@ -4,7 +4,7 @@
     <AppBar />
 
     <v-main>
-      <v-container>
+      <v-container fluid>
         <nuxt keep-alive />
       </v-container>
     </v-main>

@@ -4,7 +4,7 @@ const competitions = require('../../assets/data/competitions.json')
 
 /* GET records listing. */
 router.get('/competitions', function (req, res) {
-  console.log('/competitions')
+  console.log('/api/competitions')
   res.json(competitions)
 })
 module.exports = router
