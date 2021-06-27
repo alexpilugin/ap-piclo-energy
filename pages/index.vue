@@ -53,6 +53,7 @@
           <v-card-text>
             <BuyersTab v-if="currentTab == 'buyers'" />
             <SellersTab v-if="currentTab == 'sellers'" />
+            <CompetitionTab v-if="currentTab == 'competitions'" />
           </v-card-text>
         </v-card>
     </v-container>
@@ -60,16 +61,18 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapState } from "vuex";
 
 import SellersTab from "~/components/SellersTab.vue";
 import BuyersTab from "~/components/BuyersTab.vue";
+import CompetitionTab from "~/components/CompetitionTab.vue";
 
 export default {
   name: "IndexPage",
   components: {
     SellersTab,
     BuyersTab,
+    CompetitionTab
   },
   async asyncData({ $http, store }) {
 
@@ -109,17 +112,7 @@ export default {
       buyers: (state) => state.buyers,
       competitions: (state) => state.competitions,
       sellers: (state) => state.sellers,
-    }),
-    /*
-    ...mapGetters({
-      buyersReady: "isBuyersDataLoaded",
-      compReady: "isCompetitionsDataLoaded",
-      sellersReady: "isSellersDataLoaded",
-      getSellers: "getSellers",
-      getCompetitions: "getCompetitions",
-      getBids: "getBids",
-    }),
-    */
+    })
   },
   methods: {
     showSellers() {

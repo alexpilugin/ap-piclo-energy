@@ -174,6 +174,13 @@ export const getters = {
       return competitions.find(s => s.id === id)
     }
     return findCompetition
+  },
+  getBuyerById: (state) => {
+    const buyers = state.buyers
+    function findBuyer(id) {
+      return buyers.find(b => b.id === id)
+    }
+    return findBuyer
   }
 }
 
@@ -184,7 +191,7 @@ export const mutations = {
   },
   [SET_COMPETITIONS]: (state, competitions) => {
     if (devMode) console.log("Mutation: SET_COMPETITIONS");
-    state.competitions = competitions;
+    state.competitions = competitions.sort((a, b) => b.buyer - a.buyer || b.minimum_capacity - a.minimum_capacity)
   },
   [SET_SELLERS]: (state, sellers) => {
     if (devMode) console.log("Mutation: SET_SELLERS");
