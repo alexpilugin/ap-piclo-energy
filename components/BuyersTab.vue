@@ -3,7 +3,7 @@
     <v-row v-if="buyersReady">
       <v-col cols="12">
         <span class="text-h4 pr-3 pt-3 mt-1">
-          {{ getBuyers.length }} Buyers 
+          {{ getBuyers.length }} Buyers (System Operators)
         </span>
       </v-col>
     </v-row>
@@ -22,7 +22,7 @@
           class="ma-0"
           outlined
           :color="currentBuyerColor(buyer.id)"
-          @click="clickBuyer(buyer.id, null)"
+          @click="clickBuyer(buyer, null)"
         >
           {{ i + 1 }} - {{ buyer.id }}
         </v-btn>
@@ -33,6 +33,9 @@
       <v-col cols="12" sm="12">
         <p class="text-h4">
           Selected Buyer has {{ getCompetitions.length }} Competitions
+        </p>
+        <p class="text-h5">
+          <span class="primary--text">Name: </span> {{ selectedBuyer.name }}
         </p>
       </v-col>
     </v-row>
@@ -53,41 +56,64 @@
           @click="clickComp(comp)"
         >
           {{ i + 1 }} - {{ comp.id }}<br />
-          {{ comp.minimum_capacity }}
+          {{ comp.minimum_capacity }} MW
         </v-btn>
       </v-col>
     </v-row>
 
-    <v-row v-if="selectedCompId">
-      <v-col cols="12" sm="12">
-        <p class="text-h4">
-          Selected Competition has {{ getBids.length }} Bids. 
-        </p>
-        <p class="text-h5">
-          <span class="primary--text">Name:</span> {{ selectedComp.name }}
-        </p>
-        <p class="text-h5">
-          <span class="primary--text">Currency:</span> {{ selectedComp.currency }}
-        </p>
-        <p class="text-h5">
-          <span class="primary--text">Minimum Capacity:</span> {{ selectedComp.minimum_capacity }}
-        </p>
-      </v-col>
-    </v-row>
+    <div v-if="selectedCompId" class="comp-info mt-5 pa-5">
+      <v-row>
+        <v-col cols="12" sm="12">
+          <p class="text-h4">
+            Selected Competition has {{ getBidsInfo.bids.length }} Bids.
+          </p>
+          <p class="text-h5">
+            <span class="primary--text">Name: </span> {{ selectedComp.name }}
+          </p>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col cols="12" sm="6" md="4">
+          <p class="text-h5">
+            <span class="primary--text">Currency: </span> {{ selectedComp.currency}}<br />
+            <span class="primary--text">Minimum Capacity: </span>{{ selectedComp.minimum_capacity }} MW
+          </p>
+          <p class="text-h5"></p>
+          <p class="text-h5">
+            <span class="primary--text">Start: </span>{{ getBidsInfo.compOpenString }}<br />
+            <span class="primary--text">End: </span>{{ getBidsInfo.compClosedString }}<br />
+            <span class="primary--text">Duration (d:h:m): </span>{{ getBidsInfo.durationHours }}
+          </p>
+        </v-col>
+        <v-col cols="12" sm="6" md="4">
+          <p class="text-h5">
+            <span class="primary--text">Total Bids: </span>{{ getBidsInfo.numTotalBids }}<br />
+            <span class="primary--text">Accepted Bids: </span>{{ getBidsInfo.numBidsAccepted }}<br />
+            <span class="primary--text">Bids with acceptable capacity: </span>{{ getBidsInfo.numBidsEnoughCapacity }}<br />
+            <span class="primary--text">Bids with verified sellers: </span>{{ getBidsInfo.numBidsVerifiedSeller }}<br />
+            <span class="primary--text">In time range: </span>{{ getBidsInfo.bids.length }}<br />
+          </p>
+        </v-col>
+      </v-row>
 
-    <v-row v-if="selectedCompId">
-      <v-col cols="12" sm="12">
-        <v-btn
-          class="ma-2"
-          v-for="(bid, i) in getBids"
+      <v-row>
+        <v-col
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3"
+          v-for="(bid, i) in getBidsInfo.bids"
           :key="bid.id"
-          :color="currentBidColor(bid.id, bid.accepted, bid.offered_capacity)"
         >
+        <div class="bid-info">
+          SellerId: {{ bid.seller }}<br />
           {{ i + 1 }} - {{ bid.id }}<br />
-          {{ bid.offered_capacity }}
-        </v-btn>
-      </v-col>
-    </v-row>
+          {{ bid.offered_capacity }} MW<br />
+          {{ bid.value }} {{ selectedComp.currency }}
+        </div>
+        </v-col>
+      </v-row>
+    </div>
   </div>
 </template>
 
@@ -99,11 +125,12 @@ export default {
   data() {
     return {
       selectedComp: null,
+      selectedBuyer: null,
       selectedBuyerId: null,
       showVerifiedSellers: false,
       selectedCompId: null,
       compMinCapacity: null,
-    }
+    };
   },
   computed: {
     ...mapState({
@@ -119,15 +146,17 @@ export default {
       getBuyers: "getBuyers",
       getCompetitions: "getCompetitions",
       getBids: "getBids",
+      getBidsInfo: "getBidsInfo",
     }),
   },
   methods: {
-    clickBuyer(id, compId) {
+    clickBuyer(buyer, compId) {
       this.selectedComp = null;
-      this.selectedBuyerId = this.selectedBuyerId !== id ? id : null;
+      this.selectedBuyerId = this.selectedBuyerId !== buyer.id ? buyer.id : null;
+      this.selectedBuyer = buyer;
       this.$store.dispatch("selectBuyer", this.selectedBuyerId);
       this.selectedCompId = compId;
-      this.$store.dispatch("showBids", this.selectedCompId);
+      this.$store.dispatch("showBids", null);
     },
     currentBuyerColor(id) {
       return this.selectedBuyerId === id ? "success" : "primary";
@@ -141,17 +170,27 @@ export default {
       this.$store.dispatch("selectBuyer", comp.buyer);
       this.selectedCompId = this.selectedCompId !== comp.id ? comp.id : null;
       this.compMinCapacity = this.selectedCompId ? comp.minimum_capacity : null;
-      this.$store.dispatch("showBids", this.selectedCompId);
-    },
-    currentBidColor(id, accepted, offeredCapacity) {
-      if (offeredCapacity >= this.compMinCapacity) {
-        return accepted ? "success" : "notverifiedsuccess";
-      }
-      return accepted ? "primary" : "notverified";
+      this.$store.dispatch("showBids", { selectedComp: comp });
     }
-  }
+  },
 };
 </script>
 
 <style>
+.comp-info {
+  padding: 10px;
+  border-radius: 4px;
+  border: solid 1px #4caf50;  
+}
+.bid-info {
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border-radius: 4px;
+  border: solid 1px #4caf50;
+  color: #4caf50;
+  font-size: 1.2rem;
+}
 </style>

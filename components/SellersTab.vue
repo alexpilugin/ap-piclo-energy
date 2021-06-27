@@ -2,25 +2,31 @@
   <div>
     <v-row v-if="sellersReady">
       <v-col cols="12">
-        <span class="text-h4 pr-3 pt-3 mt-1"
-          >Sellers ({{ getSellers.length }})</span
-        >
+        <span class="text-h4 pr-3 ">Sellers ({{ getSellers.length }})</span>
         <v-btn outlined class="pt-0" @click="ShowVerifiedSellers()">
-          Show verified only
+          {{ showAllSellers ? "Show verified only" : " Show all" }}
         </v-btn>
       </v-col>
     </v-row>
 
     <v-row v-if="sellersReady">
-      <v-col cols="12" sm="12">
+      <v-col 
+        cols="12"
+        sm="4"
+        md="3"
+        lg="2"
+        xl="1"
+        v-for="(seller, i) in getSellers"
+        :key="seller.id"
+      >
         <v-btn
-          class="ma-2"
-          v-for="(seller, i) in getSellers"
-          :key="seller.id"
+          block
+          outlined
           :color="currentSellerColor(seller.id, seller.verified)"
           @click="clickSeller(seller.id)"
         >
-          {{ i + 1 }} - {{ seller.id }}
+          {{ i + 1 }} - {{ seller.id }}<br />
+          {{ seller.verified ? "verified" : "not" }}
         </v-btn>
       </v-col>
     </v-row>
@@ -34,7 +40,7 @@ export default {
   name: "SellersTab",
   data() {
     return {
-      showVerifiedSellers: false,
+      showAllSellers: false, // default
       selectedSellerId: false
     }
   },
@@ -56,8 +62,8 @@ export default {
   },
   methods: {
     ShowVerifiedSellers() {
-      this.showVerifiedSellers = !this.showVerifiedSellers
-      this.$store.dispatch("showVerifiedSellers", this.showVerifiedSellers) 
+      this.showAllSellers = !this.showAllSellers
+      this.$store.dispatch("showAllSellers", this.showAllSellers) 
     },
     clickSeller(id) {
       //notverifiedsuccess

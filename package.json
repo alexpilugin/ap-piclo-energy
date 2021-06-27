@@ -14,10 +14,11 @@
   "dependencies": {
     "@nuxt/http": "latest",
     "@nuxtjs/pwa": "^3.3.4",
+    "core-js": "^3.8.3",
     "cross-env": "^5.2.0",
     "express": "^4.16.4",
-    "nuxt": "^2.0.0",
-    "core-js": "^3.8.3"
+    "moment": "^2.29.1",
+    "nuxt": "^2.0.0"
   },
   "devDependencies": {
     "@nuxtjs/vuetify": "^1.0.0",

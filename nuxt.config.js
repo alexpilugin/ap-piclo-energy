@@ -79,14 +79,14 @@ module.exports = {
       themes: {
         dark: {
           primary: colors.blue.darken2,
-          notverified: colors.indigo.darken4,
           accent: colors.grey.darken3,
           secondary: colors.amber.darken3,
           info: colors.teal.lighten1,
           warning: colors.amber.base,
           error: colors.deepOrange.accent4,
           success: colors.green,
-          notverifiedsuccess: colors.green.darken4
+          notverified: colors.blue.darken4,
+          notverifiedsuccess: colors.green.darken3
         }
       }
     }

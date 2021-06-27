@@ -1,9 +1,10 @@
+import moment from 'moment'
 let devMode = process.env.NODE_ENV === 'development';
 const SET_BUYERS = 'SET_BUYERS';
 const SET_COMPETITIONS = 'SET_COMPETITIONS'; //competitions
 const SET_SELLERS = 'SET_SELLERS'; // sellers
 const SET_BIDS = 'SET_BIDS'; // bids
-const SHOW_VERIFIED_SELLERS = 'SHOW_VERIFIED_SELLERS'
+const SHOW_ALL_SELLERS = 'SHOW_ALL_SELLERS'
 const SELECT_BUYER = 'SELECT_BUYER'
 const SHOW_BIDS = 'SHOW_BIDS'
 
@@ -12,29 +13,86 @@ export const state = () => ({
   competitions: [],
   sellers: [],
   bids: [],
-  showVerifiedSellers: false,
+  showAllSellers: false,
   selectedBuyerId: null,
-  selectedCompId: null
+  selectedCompId: null,
+  selectedComp: null
 })
 
 export const getters = {
   getBuyers: (state) => state.buyers,
   getCompetitions: (state) => {
-    if(!state.competitions.length || state.competitions.length == 0) return state.competitions
-    if(!state.selectedBuyerId) return [...state.competitions].sort((a,b) => b.minimum_capacity - a.minimum_capacity)    
+    if (!state.competitions.length || state.competitions.length == 0) return state.competitions
+    if (!state.selectedBuyerId) return [...state.competitions].sort((a, b) => b.minimum_capacity - a.minimum_capacity)
     return state.competitions.filter(comp => comp.buyer === state.selectedBuyerId)
-              .sort((a,b) => b.minimum_capacity - a.minimum_capacity)
+      .sort((a, b) => b.minimum_capacity - a.minimum_capacity)
   },
   getSellers: (state) => {
-    if(!state.showVerifiedSellers) return state.sellers
-    if(!state.sellers.length || state.sellers.length == 0) return state.sellers
+    if (!state.sellers.length || state.sellers.length == 0) return []
+
+    if (state.showAllSellers) return [...state.sellers]
+            .sort((a, b) => b.verified - a.verified || b.name - a.name)
+    
     return state.sellers.filter(seller => seller.verified)
+            .sort((a, b) => b.verified - a.verified || b.name - a.name)
   },
   getBids: (state) => {
-    if(!state.bids.length || state.bids.length == 0) return []
-    if(!state.selectedCompId) return []
+    if (!state.bids.length || state.bids.length == 0) return []
+    if (!state.selectedCompId) return []
     return state.bids.filter(bid => bid.competition == state.selectedCompId)
-              .sort((a,b) => b.offered_capacity - a.offered_capacity)
+      .sort((a, b) => b.offered_capacity - a.offered_capacity)
+  },
+  getBidsInfo: (state) => {
+
+    const sellers = state.sellers
+    const minCapacity = state.selectedComp.minimum_capacity
+
+    const startDate = moment(state.selectedComp.open)
+    const endDate = moment(state.selectedComp.closed)
+ 
+    const ms = moment.duration(endDate.diff(startDate))
+    const d = moment.duration(ms);
+
+    const durationString = d.days() + ':' + d.hours() + ':' + d.minutes()
+
+    const result = {
+      bids: [],
+      bidsTotal: [],
+      bidsAccepted: [],
+      bidsEnoughCapacity: [],
+      numTotalBids: 0,
+      numBidsAccepted: 0,
+      numBidsEnoughCapacity: 0,
+      numBidsVerifiedSeller: 0,
+      compOpenString: startDate.format('MMMM Do YYYY, h:mm:ss a'),
+      compClosedString: endDate.format('MMMM Do YYYY, h:mm:ss a'),
+      durationHours: durationString,
+    }
+
+    if (!state.selectedCompId || !state.bids.length || state.bids.length == 0) return result
+
+    result.bids = state.bids.filter(bid => {
+      if (bid.competition == state.selectedCompId) {
+        result.numTotalBids++;
+        result.bidsTotal.push(bid)
+        if (bid.accepted) {
+          result.numBidsAccepted++;
+          result.bidsAccepted.push(bid)
+          if (bid.offered_capacity >= minCapacity) {
+            result.numBidsEnoughCapacity++;
+            result.bidsEnoughCapacity.push(bid)
+            const verified = sellers.find(s => s.id === bid.seller).verified;
+            if (verified) {
+              result.numBidsVerifiedSeller++;
+              const isBetween = moment(bid.created).isBetween(startDate, endDate)
+              if (isBetween) return true
+            }
+          }
+        }
+      }
+    }).sort((a, b) => b.offered_capacity - a.offered_capacity);
+
+    return result
   },
   isBuyersDataLoaded: (state) => {
     return state.buyers.length && state.buyers.length > 0 ? true : false
@@ -52,62 +110,68 @@ export const getters = {
 
 export const mutations = {
   [SET_BUYERS]: (state, buyers) => {
-    if(devMode) console.log("Mutation: SET_BUYERS");
+    if (devMode) console.log("Mutation: SET_BUYERS");
     state.buyers = buyers;
   },
   [SET_COMPETITIONS]: (state, competitions) => {
-    if(devMode) console.log("Mutation: SET_COMPETITIONS");
+    if (devMode) console.log("Mutation: SET_COMPETITIONS");
     state.competitions = competitions;
   },
   [SET_SELLERS]: (state, sellers) => {
-    if(devMode) console.log("Mutation: SET_SELLERS");
+    if (devMode) console.log("Mutation: SET_SELLERS");
     state.sellers = sellers;
   },
   [SET_BIDS]: (state, bids) => {
-    if(devMode) console.log("Mutation: SET_BIDS");
+    if (devMode) console.log("Mutation: SET_BIDS");
     state.bids = bids;
-  } ,
-  [SHOW_VERIFIED_SELLERS]:  (state, show) => {
-    if(devMode) console.log("Mutation: SHOW_VERIFIED_SELLERS"); 
-    state.showVerifiedSellers = show;
+  },
+  [SHOW_ALL_SELLERS]: (state, show) => {
+    if (devMode) console.log("Mutation: SHOW_ALL_SELLERS");
+    state.showAllSellers = show;
   },
   [SELECT_BUYER]: (state, buyerId) => {
-    if(devMode) console.log("Mutation: SELECT_BUYER"); 
-    state.selectedBuyerId = buyerId; 
+    if (devMode) console.log("Mutation: SELECT_BUYER");
+    state.selectedBuyerId = buyerId;
   },
-  [SHOW_BIDS]: (state, compId) => {
-    if(devMode) console.log("Mutation: SHOW_BIDS"); 
-    state.selectedCompId = compId; 
+  [SHOW_BIDS]: (state, payload) => {
+    if (devMode) console.log("Mutation: SHOW_BIDS", payload);
+    if (!payload) {
+      state.selectedCompId = null;
+      state.selectedComp = null
+    } else {
+      state.selectedCompId = payload.selectedComp.id;
+      state.selectedComp = payload.selectedComp
+    }
   }
 }
 
 export const actions = {
   setBuyers: (context, buyers) => {
-    if(devMode) console.log("Action: setBuyers");
-    context.commit(SET_BUYERS, buyers )
-  }, 
+    if (devMode) console.log("Action: setBuyers");
+    context.commit(SET_BUYERS, buyers)
+  },
   setCompetitions: (context, competitions) => {
-    if(devMode) console.log("Action: setCompetitions");
-    context.commit(SET_COMPETITIONS, competitions )
-  }, 
+    if (devMode) console.log("Action: setCompetitions");
+    context.commit(SET_COMPETITIONS, competitions)
+  },
   setSellers: (context, sellers) => {
-    if(devMode) console.log("Action: setSellers");
-    context.commit(SET_SELLERS, sellers )
-  }, 
+    if (devMode) console.log("Action: setSellers");
+    context.commit(SET_SELLERS, sellers)
+  },
   setBids: (context, bids) => {
-    if(devMode) console.log("Action: setBids");
-    context.commit(SET_BIDS, bids )
-  },  
-  showVerifiedSellers: (context, show) => {
-    if(devMode) console.log("Action: showVerifiedSellers");  
-    context.commit(SHOW_VERIFIED_SELLERS, show )
+    if (devMode) console.log("Action: setBids");
+    context.commit(SET_BIDS, bids)
+  },
+  showAllSellers: (context, show) => {
+    if (devMode) console.log("Action: showAllSellers");
+    context.commit(SHOW_ALL_SELLERS, show)
   },
   selectBuyer: (context, buyerId) => {
-    if(devMode) console.log("Action: selectBuyer"); 
-    context.commit(SELECT_BUYER, buyerId )
+    if (devMode) console.log("Action: selectBuyer");
+    context.commit(SELECT_BUYER, buyerId)
   },
-  showBids: (context, compId) => {
-    if(devMode) console.log("Action: showBids"); 
-    context.commit(SHOW_BIDS, compId ) 
+  showBids: (context, payload) => {
+    if (devMode) console.log("Action: showBids", payload);
+    context.commit(SHOW_BIDS, payload)
   }
 }
