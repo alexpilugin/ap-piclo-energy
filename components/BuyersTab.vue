@@ -29,7 +29,7 @@
       </v-col>
     </v-row>
 
-    <v-row v-if="compReady && selectedBuyerId !== null">
+    <v-row v-if="compReady && selectedBuyerId !== null && selectedBuyer !== null">
       <v-col cols="12" sm="12">
         <p class="text-h4">
           Selected Buyer has {{ getCompetitions.length }} Competitions
@@ -105,7 +105,7 @@
           v-for="(bid, i) in getBidsInfo.bids"
           :key="bid.id"
         >
-        <div class="bid-info">
+        <div class="comp-bid-info">
           SellerId: {{ bid.seller }}<br />
           {{ i + 1 }} - {{ bid.id }}<br />
           {{ bid.offered_capacity }} MW<br />
@@ -126,11 +126,17 @@ export default {
     return {
       selectedComp: null,
       selectedBuyer: null,
-      selectedBuyerId: null,
       showVerifiedSellers: false,
       selectedCompId: null,
       compMinCapacity: null,
     };
+  },
+  mounted() {
+    if (!this.selectedBuyer) {
+      // reset
+      this.$store.dispatch("selectBuyer", null);
+      this.$store.dispatch("showBids", null);
+    }
   },
   computed: {
     ...mapState({
@@ -138,6 +144,7 @@ export default {
       competitions: (state) => state.competitions,
       sellers: (state) => state.sellers,
       bids: (state) => state.bids,
+      selectedBuyerId: (state) => state.selectedBuyerId
     }),
     ...mapGetters({
       buyersReady: "isBuyersDataLoaded",
@@ -152,9 +159,9 @@ export default {
   methods: {
     clickBuyer(buyer, compId) {
       this.selectedComp = null;
-      this.selectedBuyerId = this.selectedBuyerId !== buyer.id ? buyer.id : null;
+      const sb = this.selectedBuyerId !== buyer.id ? buyer.id : null;
       this.selectedBuyer = buyer;
-      this.$store.dispatch("selectBuyer", this.selectedBuyerId);
+      this.$store.dispatch("selectBuyer", sb);
       this.selectedCompId = compId;
       this.$store.dispatch("showBids", null);
     },
@@ -166,7 +173,6 @@ export default {
     },
     clickComp(comp) {
       this.selectedComp = comp;
-      this.selectedBuyerId = comp.buyer;
       this.$store.dispatch("selectBuyer", comp.buyer);
       this.selectedCompId = this.selectedCompId !== comp.id ? comp.id : null;
       this.compMinCapacity = this.selectedCompId ? comp.minimum_capacity : null;
@@ -182,7 +188,7 @@ export default {
   border-radius: 4px;
   border: solid 1px #4caf50;  
 }
-.bid-info {
+.comp-bid-info {
   padding: 5px;
   display: flex;
   align-items: center;

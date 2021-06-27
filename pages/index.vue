@@ -3,6 +3,7 @@
     <v-container fluid>
         <v-card>
           <v-card-title>
+            
             <v-row>
               <v-col cols="12" sm="4" lg="3">
                 <v-btn
@@ -12,7 +13,8 @@
                   :color="currentTab == 'buyers'?'success':'primary'"
                   @click="showBuyers()"
                 >
-                  Buyers ({{ buyers.length }})
+                  <v-icon dark>mdi-battery-charging-40</v-icon>
+                  <span class="pl-3 hidden-sm-and-down">Buyers ({{ buyers.length }})</span>
                 </v-btn>
               </v-col>
 
@@ -26,7 +28,8 @@
                   :color="currentTab == 'competitions'?'success':'primary'"
                   @click="showCompetitions()"
                 >
-                  Competitions ({{ competitions.length }})
+                  <v-icon dark>mdi-basket</v-icon>
+                  <span class="pl-3 hidden-sm-and-down">Competitions ({{ competitions.length }})</span>
                 </v-btn>
               </v-col>
 
@@ -40,7 +43,8 @@
                   :color="currentTab == 'sellers'?'success':'primary'"
                   @click="showSellers()"
                 >
-                  Sellers ({{ sellers.length }})
+                  <v-icon dark>mdi-plus-network</v-icon>
+                  <span class="pl-3 hidden-sm-and-down">Sellers ({{ sellers.length }})</span>
                 </v-btn>
               </v-col>
             </v-row>

@@ -4,19 +4,23 @@ const SET_BUYERS = 'SET_BUYERS';
 const SET_COMPETITIONS = 'SET_COMPETITIONS'; //competitions
 const SET_SELLERS = 'SET_SELLERS'; // sellers
 const SET_BIDS = 'SET_BIDS'; // bids
-const SHOW_ALL_SELLERS = 'SHOW_ALL_SELLERS'
+const SHOW_VERIFIED_SELLERS = 'SHOW_VERIFIED_SELLERS'
 const SELECT_BUYER = 'SELECT_BUYER'
 const SHOW_BIDS = 'SHOW_BIDS'
+const SELECT_SELLER = 'SELECT_SELLER'
+const SHOW_SELLER_ACCEPTED_BIDS = 'SHOW_SELLER_ACCEPTED_BIDS'
 
 export const state = () => ({
   buyers: [],
   competitions: [],
   sellers: [],
   bids: [],
-  showAllSellers: false,
+  showVerifiedSellers: true,
   selectedBuyerId: null,
+  selectedSellerId: null,
   selectedCompId: null,
-  selectedComp: null
+  selectedComp: null,
+  showAcceptedBids: false
 })
 
 export const getters = {
@@ -28,19 +32,77 @@ export const getters = {
       .sort((a, b) => b.minimum_capacity - a.minimum_capacity)
   },
   getSellers: (state) => {
-    if (!state.sellers.length || state.sellers.length == 0) return []
 
-    if (state.showAllSellers) return [...state.sellers]
-            .sort((a, b) => b.verified - a.verified || b.name - a.name)
-    
-    return state.sellers.filter(seller => seller.verified)
-            .sort((a, b) => b.verified - a.verified || b.name - a.name)
+    const result = {
+      sellers: [],
+      verifiedSellers: [],
+      filtered: [],
+      totalSellersLength: 0,
+      verifiedSellersLength: 0
+    }
+  
+    if (!state.sellers.length || state.sellers.length == 0) return result
+  
+    result.sellers = [...state.sellers]
+              .sort((a, b) => b.verified - a.verified || b.name - a.name)
+  
+    result.totalSellersLength = state.sellers.length
+  
+    const verifiedSellers = state.sellers.filter(seller => seller.verified)
+              .sort((a, b) => b.verified - a.verified || b.name - a.name)
+
+    const notVerifiedSellers = state.sellers.filter(seller => !seller.verified)
+              .sort((a, b) => b.verified - a.verified || b.name - a.name)
+  
+    result.verifiedSellers = verifiedSellers
+    result.verifiedSellersLength = verifiedSellers.length
+
+    result.filtered = state.showVerifiedSellers ? verifiedSellers : notVerifiedSellers
+  
+    return result
   },
+  getSellerBids: (state) => {
+    const result = {
+      bids: [],
+      bidsLength: 0,
+      sellerBids: [],
+      sellerBidsLength: 0,
+      filteredSellerBids: [],
+      sellerAcceptedBidsNum: 0,
+      sellerAcceptedBids: [],
+      sellerNotAcceptedBids: []
+    }
+    if (!state.bids.length || state.bids.length == 0) return result
+    
+    result.bids = state.bids //all bids (5000)
+    result.bidsLength = state.bids.length
+
+    if (!state.selectedSellerId) return result
+
+    const sellerBids = state.bids.filter(bid => {      
+      if(bid.seller == state.selectedSellerId) {
+        if(bid.accepted) {
+          result.sellerAcceptedBids.push(bid)
+          result.sellerAcceptedBidsNum++;
+        } else {
+          result.sellerNotAcceptedBids.push(bid)
+        }
+        return true
+      }
+    }).sort((a, b) => b.accepted - a.accepted)
+
+    result.sellerBids = sellerBids
+    result.sellerBidsLength = sellerBids.length
+
+    result.filteredSellerBids = !state.showAcceptedBids ? result.sellerAcceptedBids : result.sellerNotAcceptedBids
+    return result
+  },
+  // get bids for a selected competition
   getBids: (state) => {
     if (!state.bids.length || state.bids.length == 0) return []
     if (!state.selectedCompId) return []
     return state.bids.filter(bid => bid.competition == state.selectedCompId)
-      .sort((a, b) => b.offered_capacity - a.offered_capacity)
+        .sort((a, b) => b.offered_capacity - a.offered_capacity)
   },
   getBidsInfo: (state) => {
 
@@ -125,9 +187,9 @@ export const mutations = {
     if (devMode) console.log("Mutation: SET_BIDS");
     state.bids = bids;
   },
-  [SHOW_ALL_SELLERS]: (state, show) => {
-    if (devMode) console.log("Mutation: SHOW_ALL_SELLERS");
-    state.showAllSellers = show;
+  [SHOW_VERIFIED_SELLERS]: (state, show) => {
+    if (devMode) console.log("Mutation: SHOW_VERIFIED_SELLERS");
+    state.showVerifiedSellers = show;
   },
   [SELECT_BUYER]: (state, buyerId) => {
     if (devMode) console.log("Mutation: SELECT_BUYER");
@@ -142,7 +204,15 @@ export const mutations = {
       state.selectedCompId = payload.selectedComp.id;
       state.selectedComp = payload.selectedComp
     }
-  }
+  },
+  [SELECT_SELLER]: (state, sellerId) => {
+    if (devMode) console.log("Mutation: SELECT_SELLER", sellerId); 
+    state.selectedSellerId = sellerId
+  },
+  [SHOW_SELLER_ACCEPTED_BIDS]: (state, show) => {
+    if (devMode) console.log("Mutation: SHOW_SELLER_ACCEPTED_BIDS");
+    state.showAcceptedBids = show;
+  },
 }
 
 export const actions = {
@@ -162,9 +232,9 @@ export const actions = {
     if (devMode) console.log("Action: setBids");
     context.commit(SET_BIDS, bids)
   },
-  showAllSellers: (context, show) => {
-    if (devMode) console.log("Action: showAllSellers");
-    context.commit(SHOW_ALL_SELLERS, show)
+  showVerifiedSellers: (context, show) => {
+    if (devMode) console.log("Action: showVerifiedSellers");
+    context.commit(SHOW_VERIFIED_SELLERS, show)
   },
   selectBuyer: (context, buyerId) => {
     if (devMode) console.log("Action: selectBuyer");
@@ -173,5 +243,13 @@ export const actions = {
   showBids: (context, payload) => {
     if (devMode) console.log("Action: showBids", payload);
     context.commit(SHOW_BIDS, payload)
+  },
+  selectSeller: (context, sellerId) => {
+    if (devMode) console.log("Action: selectSeller");
+    context.commit(SELECT_SELLER, sellerId) 
+  },
+  toggleShowAcceptedSellerBids: (context, show) => {
+    if (devMode) console.log("Action: toggleShowAcceptedSellerBids");
+    context.commit(SHOW_SELLER_ACCEPTED_BIDS, show)
   }
 }
