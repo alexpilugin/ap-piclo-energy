@@ -167,6 +167,13 @@ export const getters = {
   },
   isBidsDataLoaded: (state) => {
     return state.bids.length && state.bids.length > 0 ? true : false
+  },
+  getCompetitionById: (state) => {
+    const competitions = state.competitions
+    function findCompetition(id) {
+      return competitions.find(s => s.id === id)
+    }
+    return findCompetition
   }
 }
 

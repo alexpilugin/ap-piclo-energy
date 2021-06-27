@@ -62,9 +62,15 @@
         :key="bid.id"
       >
       <div :class="getClass(bid)">
-        {{ i + 1 }} - {{ bid.id }}<br />
-        Offered Capacity: {{ bid.offered_capacity }} MW<br />
-        Value: {{ bid.value }}
+        <p>
+          {{ i + 1 }} - {{ bid.id }}<br />
+          Created: <span class="info--text">{{ getReadableDate(bid.created) }}</span><br /><br />
+          Accepted: <span class="info--text">{{ bid.accepted ? "Yes" : "Not" }}</span><br />
+          In Time Range: <span class="info--text">{{ isInTimeRange(bid.created, getCompetitionById(bid.competition)) }}</span><br />
+          Offered Capacity: <span class="info--text">{{ bid.offered_capacity }} MW</span><br />
+          Requested Minimum Capacity: <span class="info--text">{{ getCompetitionById(bid.competition).minimum_capacity }} MW</span><br />
+          Value: <span class="info--text">{{ bid.value }} {{ getCompetitionById(bid.competition).currency }}</span><br />
+        </p>
       </div>
       </v-col>
     </v-row>
@@ -74,6 +80,7 @@
 
 <script>
 import { mapState, mapGetters } from "vuex";
+import moment from 'moment'
 
 export default {
   name: "SellersTab",
@@ -104,7 +111,8 @@ export default {
       sellersReady: "isSellersDataLoaded",
       getSellers: "getSellers",
       getCompetitions: "getCompetitions",
-      getSellerBids: "getSellerBids"
+      getSellerBids: "getSellerBids",
+      getCompetitionById: "getCompetitionById"
     }),
   },
   methods: {
@@ -132,16 +140,25 @@ export default {
       this.$store.dispatch("selectSeller", ss); 
       this.$store.dispatch("toggleShowAcceptedSellerBids", false)
     },
+    getReadableDate(bidCreated) {
+      const createdDate = moment(bidCreated)
+      return createdDate.format('MMMM Do YYYY, h:mm:ss a')
+    },
+    isInTimeRange(bidCreated, competition) {
+      const startDate = moment(competition.open)
+      const endDate = moment(competition.closed)
+      return moment(bidCreated).isBetween(startDate, endDate) ? "Yes" : "Not"
+    }
   }
 };
 </script>
 
 <style>
 .seller-bid-info {
-  padding: 5px;
+  padding: 10px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
   border-radius: 4px;
   border: solid 1px #1976d2;
