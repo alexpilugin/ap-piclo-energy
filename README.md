@@ -1,7 +1,9 @@
 # ap-piclo-energy-frontend
 
-> This is a Nuxt.js SSR (Server-Side Rendering) web application. Solution by Alex Pilugin (Sunday 27 Jun 2021).
-This web application uses [Express.js](https://expressjs.com) as a Backend Server.
+> This is a Nuxt.js SSR (Server-Side Rendering) web application. Solution by Alex Pilugin (Sunday 27 Jun 2021).      
+This web application uses [Express.js](https://expressjs.com) as a Backend Server.     
+This web application has my own UX/UI Design and colour solution.
+     
 
 ## Build Setup
 
